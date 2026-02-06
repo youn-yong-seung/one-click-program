@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oneclick-server
+    restart: always
+    ports:
+      - "5001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      # DB Connection (Docker 내부 네트워크 통신 시 'localhost' 대신 서비스명 'db' 사용)
+      - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=OneClick;Username=skoo1100;Password=dnjf1djrRi!@
+      - Jwt__Key=ChangeThisKeyToSomethingVerySecureAndLongEnough!
+      - Jwt__Issuer=OneClickServer
+      - Jwt__Audience=OneClickClient
+    depends_on:
+      - db
+    volumes:
+      # [중요] 업데이트 파일 호스팅용 볼륨
+      # 호스트의 ./releases 폴더에 exe/Releases 파일을 넣으면 -> 컨테이너가 서빙함
+      - ./releases:/app/wwwroot
+    networks:
+      - oneclick-net
+
+  db:
+    image: postgres:15-alpine
+    container_name: oneclick-db
+    restart: always
+    environment:
+      - POSTGRES_DB=OneClick
+      - POSTGRES_USER=skoo1100
+      - POSTGRES_PASSWORD=dnjf1djrRi!@
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - oneclick-net
+
+networks:
+  oneclick-net:
+    driver: bridge
+
+volumes:
+  postgres_data:

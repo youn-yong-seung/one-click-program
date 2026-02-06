@@ -1,0 +1,83 @@
+@page "/payment/success"
+@inject NavigationManager Nav
+@inject HttpClient Http
+@using System.Web
+@using System.Net.Http.Json
+
+<div class="center-container p-10 text-center">
+    @if (isProcessing)
+    {
+        <div class="text-indigo-600 text-6xl mb-4">
+            <i class="fa-solid fa-circle-notch fa-spin"></i>
+        </div>
+        <h2 class="text-2xl font-bold mb-4">결제 승인 중...</h2>
+        <p class="text-gray-600">잠시만 기다려주세요.</p>
+    }
+    else if (isSuccess)
+    {
+        <div class="text-green-500 text-6xl mb-4">
+            <i class="fa-solid fa-circle-check"></i>
+        </div>
+        <h2 class="text-2xl font-bold mb-4">결제 성공!</h2>
+        <p class="text-gray-600 mb-6">구독이 시작되었습니다.</p>
+        <button class="btn-primary" @onclick="GoHome">대시보드로 이동</button>
+    }
+    else
+    {
+        <div class="text-red-500 text-6xl mb-4">
+            <i class="fa-solid fa-circle-xmark"></i>
+        </div>
+        <h2 class="text-2xl font-bold mb-4">승인 실패</h2>
+        <p class="text-red-500 mb-6">@errorMessage</p>
+        <button class="btn-secondary" @onclick="GoSubscription">다시 시도</button>
+    }
+</div>
+
+@code {
+    private bool isProcessing = true;
+    private bool isSuccess = false;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = Nav.ToAbsoluteUri(Nav.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        var paymentKey = query["paymentKey"];
+        var orderId = query["orderId"];
+        var amountStr = query["amount"];
+
+        if (string.IsNullOrEmpty(paymentKey) || string.IsNullOrEmpty(orderId) || string.IsNullOrEmpty(amountStr))
+        {
+            isProcessing = false;
+            errorMessage = "결제 정보가 누락되었습니다.";
+            return;
+        }
+
+        try
+        {
+            var request = new { paymentKey, orderId, amount = int.Parse(amountStr) };
+            var response = await Http.PostAsJsonAsync("api/payment/confirm", request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                isSuccess = true;
+            }
+            else
+            {
+                errorMessage = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    private void GoHome() => Nav.NavigateTo("/dashboard/home");
+    private void GoSubscription() => Nav.NavigateTo("/dashboard/subscription");
+}

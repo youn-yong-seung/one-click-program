@@ -1,0 +1,6 @@
+@OneClick.Server_HostAddress = http://localhost:5195
+
+GET {{OneClick.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

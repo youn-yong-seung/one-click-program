@@ -1,0 +1,118 @@
+@page "/login"
+@layout OneClick.Client.Shared.MainLayout
+@inject OneClick.Client.Services.AuthApiClient AuthApi
+@inject TokenService TokenService
+@inject NavigationManager Nav
+@using OneClick.Shared.DTOs
+
+<div class="center-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2>OneClick</h2>
+        </div>
+
+        <div class="auth-form">
+            <div class="form-group">
+                <label class="form-label">아이디</label>
+                <div class="input-group-custom">
+                    <i class="fa-solid fa-user input-icon"></i>
+                    <input @bind="loginModel.Username" class="form-input" placeholder="아이디를 입력해주세요" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">비밀번호</label>
+                <div class="input-group-custom">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input @bind="loginModel.Password" type="password" class="form-input" placeholder="비밀번호를 입력해주세요" 
+                           @onkeydown="@Enter" />
+                </div>
+            </div>
+
+            <button @onclick="HandleLogin" class="btn-primary-custom" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span><i class="fa-solid fa-circle-notch fa-spin"></i> 로그인 중...</span>
+                }
+                else
+                {
+                    <span>로그인</span>
+                }
+            </button>
+            
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="custom-alert alert-error">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>@errorMessage</span>
+                </div>
+            }
+
+            <div class="auth-footer">
+                회원가입을 원하시면 
+                <button @onclick="GoRegister" class="btn-link-custom">여기를 클릭해주세요</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private LoginRequestDto loginModel = new();
+    private string? errorMessage;
+    private bool isLoading = false;
+
+    private async Task Enter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            await HandleLogin();
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        if (isLoading) return;
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var response = await AuthApi.LoginAsync(loginModel);
+            if (response.IsSuccessStatusCode)
+            {
+                var result = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+                if (result != null)
+                {
+                    await TokenService.SaveTokensAsync(result.Token, result.RefreshToken);
+                    Nav.NavigateTo("/dashboard/home");
+                }
+            }
+            else
+            {
+                // 500번대 에러(서버 터짐)가 아니면 무조건 아이디/비번 틀림으로 표시
+                if ((int)response.StatusCode >= 500)
+                {
+                    errorMessage = "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
+                }
+                else
+                {
+                    errorMessage = "아이디 또는 비밀번호가 올바르지 않습니다.";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "서버와 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.";
+            Console.WriteLine(ex.Message);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GoRegister()
+    {
+        Nav.NavigateTo("/register");
+    }
+}

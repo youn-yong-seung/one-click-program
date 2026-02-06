@@ -1,0 +1,19 @@
+{
+  "Version": 1,
+  "Hash": "dzH5f0A/1rUu8GzVsIoGp4Rq+625Bbl+aQr1f1q6Bes=",
+  "Source": "OneClick.Server",
+  "BasePath": "_content/OneClick.Server",
+  "Mode": "Default",
+  "ManifestType": "Publish",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "OneClick.Server\\wwwroot",
+      "Source": "OneClick.Server",
+      "ContentRoot": "C:\\Users\\user\\Documents\\oneclick\\OneClick.Server\\wwwroot\\",
+      "BasePath": "_content/OneClick.Server",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": []
+}

@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneClick.Shared", "OneClick.Shared\OneClick.Shared.csproj", "{FCC64FB1-FC9B-44BD-8764-910DA2BFB45D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneClick.Server", "OneClick.Server\OneClick.Server.csproj", "{B1224E94-AA7A-4FEB-9A8F-3F4385B2E197}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OneClick.Client", "OneClick.Client\OneClick.Client.csproj", "{3065B502-C450-429C-8F92-F76ABFE8A0A2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FCC64FB1-FC9B-44BD-8764-910DA2BFB45D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCC64FB1-FC9B-44BD-8764-910DA2BFB45D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCC64FB1-FC9B-44BD-8764-910DA2BFB45D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCC64FB1-FC9B-44BD-8764-910DA2BFB45D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1224E94-AA7A-4FEB-9A8F-3F4385B2E197}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1224E94-AA7A-4FEB-9A8F-3F4385B2E197}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1224E94-AA7A-4FEB-9A8F-3F4385B2E197}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1224E94-AA7A-4FEB-9A8F-3F4385B2E197}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3065B502-C450-429C-8F92-F76ABFE8A0A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3065B502-C450-429C-8F92-F76ABFE8A0A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3065B502-C450-429C-8F92-F76ABFE8A0A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3065B502-C450-429C-8F92-F76ABFE8A0A2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

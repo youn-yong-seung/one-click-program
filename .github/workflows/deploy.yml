@@ -1,0 +1,30 @@
+name: Deploy to Ubuntu Server
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy via SSH
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: ${{ secrets.SERVER_HOST }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SERVER_SSH_KEY }}
+        port: 22
+        script: |
+          # 1. 프로젝트 폴더로 이동 (경로를 본인 서버에 맞게 수정하세요!)
+          cd /root/oneclick
+
+          # 2. 최신 코드 받기
+          git pull origin main
+
+          # 3. Docker 재빌드 및 재시작 (서버만)
+          docker-compose down
+          docker-compose up -d --build server
+          
+          # 4. 불필요한 이미지 정리
+          docker image prune -f

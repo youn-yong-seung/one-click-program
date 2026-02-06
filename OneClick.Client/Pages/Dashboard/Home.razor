@@ -1,0 +1,56 @@
+@page "/dashboard/home"
+@layout DashboardLayout
+@inject NavigationManager Nav
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Welcome Section -->
+    <div class="mb-12 text-center md:text-left">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">안녕하세요! <span class="text-indigo-600">OneClick</span>에 오신 것을 환영합니다.</h1>
+        <p class="text-lg text-gray-600">반복적인 업무는 이제 OneClick에게 맡기고, 더 중요한 일에 집중하세요.</p>
+    </div>
+
+    <!-- Quick Actions Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        
+        <!-- Library Card -->
+        <div @onclick='() => Nav.NavigateTo("/dashboard/library")' class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+            <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">자동화 라이브러리</h3>
+            <p class="text-gray-500 mb-4 h-12">제공되는 다양한 자동화 도구들을 살펴보고 바로 실행해보세요.</p>
+            <div class="flex items-center text-indigo-600 font-bold text-sm group-hover:underline">
+                바로가기 <i class="fa-solid fa-arrow-right ml-2"></i>
+            </div>
+        </div>
+
+        <!-- Subscription Card -->
+        <div @onclick='() => Nav.NavigateTo("/dashboard/subscription")' class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+            <div class="w-14 h-14 rounded-2xl bg-pink-50 text-pink-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-pink-600 group-hover:text-white transition-colors">
+                <i class="fa-solid fa-credit-card"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">구독 및 결제</h3>
+            <p class="text-gray-500 mb-4 h-12">이용권 상태를 확인하고 플랜을 업그레이드하세요.</p>
+            <div class="flex items-center text-pink-600 font-bold text-sm group-hover:underline">
+                관리하기 <i class="fa-solid fa-arrow-right ml-2"></i>
+            </div>
+        </div>
+
+        <!-- Guide Card (Placeholder) -->
+        <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 cursor-pointer hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <i class="fa-solid fa-book-open"></i>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">사용 가이드</h3>
+            <p class="text-gray-500 mb-4 h-12">OneClick을 100% 활용하는 방법과 팁을 확인해보세요.</p>
+            <div class="flex items-center text-emerald-600 font-bold text-sm group-hover:underline">
+                알아보기 <i class="fa-solid fa-arrow-right ml-2"></i>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@code {
+    // Landing Page Logic (Empty for now)
+}

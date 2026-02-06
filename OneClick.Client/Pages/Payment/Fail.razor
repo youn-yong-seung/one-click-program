@@ -1,0 +1,14 @@
+@page "/payment/fail"
+@inject NavigationManager Nav
+
+<div class="center-container p-10 text-center">
+    <div class="text-red-500 text-6xl mb-4">
+        <i class="fa-solid fa-circle-xmark"></i>
+    </div>
+    <h2 class="text-2xl font-bold mb-4">결제 실패</h2>
+    <button class="btn-primary" @onclick="GoBack">돌아가기</button>
+</div>
+
+@code {
+    private void GoBack() => Nav.NavigateTo("/dashboard/subscription");
+}

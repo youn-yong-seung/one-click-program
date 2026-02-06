@@ -1,0 +1,22 @@
+C:\Users\user\Documents\oneclick\OneClick.Shared\bin\Release\net8.0\OneClick.Shared.deps.json
+C:\Users\user\Documents\oneclick\OneClick.Shared\bin\Release\net8.0\OneClick.Shared.dll
+C:\Users\user\Documents\oneclick\OneClick.Shared\bin\Release\net8.0\OneClick.Shared.pdb
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Release\net8.0\OneClick.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Release\net8.0\OneClick.Shared.AssemblyInfoInputs.cache
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Release\net8.0\OneClick.Shared.AssemblyInfo.cs
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Release\net8.0\OneClick.Shared.csproj.CoreCompileInputs.cache
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Release\net8.0\OneClick.Shared.dll
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Release\net8.0\refint\OneClick.Shared.dll
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Release\net8.0\OneClick.Shared.pdb
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Release\net8.0\ref\OneClick.Shared.dll
+C:\Users\User\OneDrive\Desktop\외주 의뢰 건\2026\윤자동 원클릭 상품개발 프로젝트\One Click Program\OneClick.Shared\bin\Release\net8.0\OneClick.Shared.deps.json
+C:\Users\User\OneDrive\Desktop\외주 의뢰 건\2026\윤자동 원클릭 상품개발 프로젝트\One Click Program\OneClick.Shared\bin\Release\net8.0\OneClick.Shared.dll
+C:\Users\User\OneDrive\Desktop\외주 의뢰 건\2026\윤자동 원클릭 상품개발 프로젝트\One Click Program\OneClick.Shared\bin\Release\net8.0\OneClick.Shared.pdb
+C:\Users\User\OneDrive\Desktop\외주 의뢰 건\2026\윤자동 원클릭 상품개발 프로젝트\One Click Program\OneClick.Shared\obj\Release\net8.0\OneClick.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\User\OneDrive\Desktop\외주 의뢰 건\2026\윤자동 원클릭 상품개발 프로젝트\One Click Program\OneClick.Shared\obj\Release\net8.0\OneClick.Shared.AssemblyInfoInputs.cache
+C:\Users\User\OneDrive\Desktop\외주 의뢰 건\2026\윤자동 원클릭 상품개발 프로젝트\One Click Program\OneClick.Shared\obj\Release\net8.0\OneClick.Shared.AssemblyInfo.cs
+C:\Users\User\OneDrive\Desktop\외주 의뢰 건\2026\윤자동 원클릭 상품개발 프로젝트\One Click Program\OneClick.Shared\obj\Release\net8.0\OneClick.Shared.csproj.CoreCompileInputs.cache
+C:\Users\User\OneDrive\Desktop\외주 의뢰 건\2026\윤자동 원클릭 상품개발 프로젝트\One Click Program\OneClick.Shared\obj\Release\net8.0\OneClick.Shared.dll
+C:\Users\User\OneDrive\Desktop\외주 의뢰 건\2026\윤자동 원클릭 상품개발 프로젝트\One Click Program\OneClick.Shared\obj\Release\net8.0\refint\OneClick.Shared.dll
+C:\Users\User\OneDrive\Desktop\외주 의뢰 건\2026\윤자동 원클릭 상품개발 프로젝트\One Click Program\OneClick.Shared\obj\Release\net8.0\OneClick.Shared.pdb
+C:\Users\User\OneDrive\Desktop\외주 의뢰 건\2026\윤자동 원클릭 상품개발 프로젝트\One Click Program\OneClick.Shared\obj\Release\net8.0\ref\OneClick.Shared.dll

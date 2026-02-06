@@ -1,0 +1,33 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\user\\Documents\\oneclick\\OneClick.Client\\wwwroot\\css\\app.css",
+      "PackagePath": "staticwebassets\\css\\app.css"
+    },
+    {
+      "Id": "C:\\Users\\user\\Documents\\oneclick\\OneClick.Client\\wwwroot\\index.html",
+      "PackagePath": "staticwebassets\\index.html"
+    },
+    {
+      "Id": "C:\\Users\\user\\Documents\\oneclick\\OneClick.Client\\wwwroot\\js\\payment.js",
+      "PackagePath": "staticwebassets\\js\\payment.js"
+    },
+    {
+      "Id": "obj\\Release\\net8.0-windows\\win-x64\\staticwebassets\\msbuild.OneClick.Client.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Release\\net8.0-windows\\win-x64\\staticwebassets\\msbuild.build.OneClick.Client.props",
+      "PackagePath": "build\\OneClick.Client.props"
+    },
+    {
+      "Id": "obj\\Release\\net8.0-windows\\win-x64\\staticwebassets\\msbuild.buildMultiTargeting.OneClick.Client.props",
+      "PackagePath": "buildMultiTargeting\\OneClick.Client.props"
+    },
+    {
+      "Id": "obj\\Release\\net8.0-windows\\win-x64\\staticwebassets\\msbuild.buildTransitive.OneClick.Client.props",
+      "PackagePath": "buildTransitive\\OneClick.Client.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

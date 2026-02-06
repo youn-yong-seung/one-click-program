@@ -1,0 +1,8 @@
+# Ignore secrets file
+OneClick.Client/appsettings.json
+OneClick.Server/appsettings.json
+**/appsettings.json
+
+
+releases/
+run-*.bat

@@ -1,0 +1,654 @@
+@page "/dashboard/kakao-sender"
+@layout OneClick.Client.Shared.DashboardLayout
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject OneClick.Client.Modules.KakaoTargetSenderAutomation Automation
+@inject OneClick.Client.Modules.KakaoSenderStateService State
+@using System.Text.Json
+@using OneClick.Client.Modules
+
+<div class="max-w-7xl mx-auto py-8 px-4">
+    @if (isLoading)
+    {
+        <div class="space-y-6">
+            <div class="h-8 bg-gray-200 rounded w-1/3 animate-pulse"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/2 animate-pulse mb-8"></div>
+
+            <div class="bg-gray-200 rounded-xl h-20 w-full animate-pulse mb-6"></div>
+
+            <div class="grid grid-cols-3 gap-6 mb-6">
+                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-[500px] flex flex-col gap-4">
+                     <div class="h-6 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                     <div class="flex-1 bg-gray-100 rounded animate-pulse"></div>
+                 </div>
+                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-[500px] flex flex-col gap-4">
+                     <div class="h-6 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                     <div class="flex-1 bg-gray-100 rounded animate-pulse"></div>
+                     <div class="h-32 bg-gray-100 rounded animate-pulse"></div>
+                 </div>
+                 <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 h-[500px] flex flex-col gap-4">
+                     <div class="h-6 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                     <div class="flex-1 bg-gray-100 rounded animate-pulse"></div>
+                     <div class="h-32 bg-gray-100 rounded animate-pulse"></div>
+                 </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">카카오톡 타겟 발송</h1>
+            <p class="text-gray-600">무료방/멤버십을 구분하여 메시지를 일괄 발송합니다. (드래그 또는 버튼으로 이동)</p>
+        </div>
+    
+        @* 상단 컨트롤 *@
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
+            <div class="flex gap-3">
+                <button @onclick="RefreshOpenRooms" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                    <i class="fa-solid fa-rotate mr-2"></i>열린 채팅방 스캔
+                </button>
+                <button @onclick="DeleteSelected" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+                    <i class="fa-solid fa-trash mr-2"></i>선택 삭제
+                </button>
+                <button @onclick="ResetAll" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition">
+                    <i class="fa-solid fa-rotate-left mr-2"></i>초기화
+                </button>
+            </div>
+        </div>
+    
+        @* 메인 영역: 3열 레이아웃 *@
+        <div class="grid grid-cols-3 gap-6 mb-6">
+            @* 대기 목록 *@
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col h-full"
+                 @ondragover:preventDefault
+                 @ondrop="@(() => OnDrop(State.SourceRooms))">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-gray-900">대기 목록 (@State.SourceRooms.Count)</h2>
+                    <button @onclick="@(() => MoveSelectedTo(State.SourceRooms))" class="text-xs px-2 py-1 bg-gray-200 hover:bg-gray-300 rounded text-black font-semibold border border-gray-300">
+                        <i class="fa-solid fa-arrow-left mr-1"></i>선택 이동
+                    </button>
+                </div>
+                <div class="flex-1 space-y-2 min-h-[300px] max-h-[500px] overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50">
+                    @foreach (var room in State.SourceRooms)
+                    {
+                        <div class="p-3 bg-white rounded border border-gray-200 cursor-move hover:bg-blue-50 transition select-none @(State.SelectedRooms.Contains(room) ? "ring-2 ring-blue-500" : "")"
+                             draggable="true"
+                             @ondragstart="@(() => OnDragStart(room))"
+                             @onclick="@(() => ToggleSelection(State.SourceRooms, room))">
+                             <div class="flex items-center gap-2">
+                                 <i class="fa-solid fa-grip-vertical text-gray-500"></i>
+                                 <span class="text-sm truncate text-gray-900 font-medium" title="@room">@room</span>
+                             </div>
+                        </div>
+                    }
+                </div>
+            </div>
+    
+            @* 무료방 *@
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col h-full"
+                 @ondragover:preventDefault
+                 @ondrop="@(() => OnDrop(State.FreeRooms))">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-green-700">무료방 (@State.FreeRooms.Count)</h2>
+                    <button @onclick="@(() => MoveSelectedTo(State.FreeRooms))" class="text-xs px-2 py-1 bg-green-100 hover:bg-green-200 rounded text-green-900 font-semibold border border-green-200">
+                        <i class="fa-solid fa-arrow-down mr-1"></i>선택 이동
+                    </button>
+                </div>
+                <div class="flex-1 space-y-2 mb-4 min-h-[150px] max-h-[300px] overflow-y-auto border-2 border-dashed border-green-200 rounded-lg p-2 bg-green-50/30">
+                    @if (State.FreeRooms.Count == 0)
+                    {
+                        <div class="text-center text-gray-500 text-sm py-8 font-medium">이곳으로 드래그하거나<br/>[선택 이동] 버튼을 누르세요</div>
+                    }
+                    @foreach (var room in State.FreeRooms)
+                    {
+                        <div class="p-2 bg-white rounded border border-green-200 cursor-move hover:bg-green-50 transition select-none @(State.SelectedRooms.Contains(room) ? "ring-2 ring-green-500" : "")"
+                             draggable="true"
+                             @ondragstart="@(() => OnDragStart(room))"
+                             @onclick="@(() => ToggleSelection(State.FreeRooms, room))">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-grip-vertical text-gray-400"></i>
+                                <span class="text-sm truncate text-gray-900 font-medium" title="@room">@room</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <label class="block text-sm font-bold text-gray-800 mb-2">전송 메시지</label>
+                <textarea @bind="State.FreeMessage" 
+                          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm text-gray-900"
+                          rows="4"
+                          placeholder="무료방에 보낼 메시지 입력..."></textarea>
+            </div>
+    
+            @* 멤버십 *@
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 flex flex-col h-full"
+                 @ondragover:preventDefault
+                 @ondrop="@(() => OnDrop(State.MemberRooms))">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-purple-700">멤버십 (@State.MemberRooms.Count)</h2>
+                    <button @onclick="@(() => MoveSelectedTo(State.MemberRooms))" class="text-xs px-2 py-1 bg-purple-100 hover:bg-purple-200 rounded text-purple-900 font-semibold border border-purple-200">
+                        <i class="fa-solid fa-arrow-down mr-1"></i>선택 이동
+                    </button>
+                </div>
+                <div class="flex-1 space-y-2 mb-4 min-h-[150px] max-h-[300px] overflow-y-auto border-2 border-dashed border-purple-200 rounded-lg p-2 bg-purple-50/30">
+                    @if (State.MemberRooms.Count == 0)
+                    {
+                         <div class="text-center text-gray-500 text-sm py-8 font-medium">이곳으로 드래그하거나<br/>[선택 이동] 버튼을 누르세요</div>
+                    }
+                    @foreach (var room in State.MemberRooms)
+                    {
+                        <div class="p-2 bg-white rounded border border-purple-200 cursor-move hover:bg-purple-50 transition select-none @(State.SelectedRooms.Contains(room) ? "ring-2 ring-purple-500" : "")"
+                             draggable="true"
+                             @ondragstart="@(() => OnDragStart(room))"
+                             @onclick="@(() => ToggleSelection(State.MemberRooms, room))">
+                             <div class="flex items-center gap-2">
+                                <i class="fa-solid fa-grip-vertical text-gray-400"></i>
+                                <span class="text-sm truncate text-gray-900 font-medium" title="@room">@room</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <label class="block text-sm font-bold text-gray-800 mb-2">전송 메시지</label>
+                <textarea @bind="State.MemberMessage" 
+                          class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-sm text-gray-900"
+                          rows="4"
+                          placeholder="멤버십에 보낼 메시지 입력..."></textarea>
+            </div>
+        </div>
+    
+        @* 첨부 파일 *@
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">첨부 파일 (사진/이미지)</h2>
+            <div class="flex gap-3 items-center mb-3">
+                <input type="text" @bind="State.AttachmentPath" 
+                       class="flex-1 p-3 border border-gray-300 rounded-lg bg-white text-sm text-gray-900"
+                       placeholder="선택하거나 파일 경로를 직접 입력하세요." />
+                <button @onclick="ChooseFile" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium">
+                    파일 선택
+                </button>
+                <button @onclick="@(() => State.AttachmentPath = string.Empty)" class="px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500 transition font-medium">
+                    지우기
+                </button>
+            </div>
+            <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" @bind="State.FileFirst" class="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" />
+                <span class="text-sm text-gray-900 font-medium">파일 먼저 보내기 (체크 해제 시 메시지 먼저)</span>
+            </label>
+        </div>
+    
+        @* 예약 발송 *@
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+            <h2 class="text-lg font-bold text-gray-900 mb-4">예약 발송</h2>
+            <div class="flex flex-col gap-3">
+                <div class="flex gap-3 items-center">
+                    <input type="datetime-local" @bind="State.ScheduledTime" 
+                           class="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-900" />
+                    <button @onclick="ConfirmSchedule" 
+                            class="px-4 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-medium border border-gray-300">
+                        <i class="fa-solid fa-check mr-1"></i>시간 적용
+                    </button>
+                </div>
+                
+                @if (State.IsScheduleConfirmed && State.ScheduledTime.HasValue)
+                {
+                    <div class="mt-2 p-4 bg-blue-50 border border-blue-200 rounded-lg flex justify-between items-center animate-fade-in">
+                        <div>
+                            <span class="text-blue-800 font-bold block">
+                                <i class="fa-solid fa-calendar-check mr-2"></i>
+                                @State.ScheduledTime.Value.ToString("yyyy년 MM월 dd일 HH시 mm분")
+                            </span>
+                            <span class="text-xs text-blue-600">에 발송이 예약되었습니다.</span>
+                        </div>
+                        
+                        <button @onclick="StartScheduledSending" 
+                                class="px-6 py-2 @(State.IsScheduled ? "bg-red-500 hover:bg-red-600" : "bg-blue-600 hover:bg-blue-700") text-white rounded-lg transition font-bold shadow-md">
+                            @if (State.IsScheduled)
+                            {
+                                <span><i class="fa-solid fa-stop mr-2"></i>예약 중지</span>
+                            }
+                            else
+                            {
+                                <span><i class="fa-solid fa-play mr-2"></i>예약 타이머 시작</span>
+                            }
+                        </button>
+                    </div>
+                }
+    
+                @if (State.IsScheduled && remainingSeconds > 0)
+                {
+                    <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                        <span class="text-yellow-800 font-bold text-lg">
+                            <i class="fa-solid fa-hourglass-half mr-2 spinning"></i>
+                            남은 시간: @TimeSpan.FromSeconds(remainingSeconds).ToString(@"hh\:mm\:ss")
+                        </span>
+                        <p class="text-xs text-gray-500 mt-1">프로그램을 종료하지 마세요.</p>
+                    </div>
+                }
+            </div>
+        </div>
+    
+        @* 진행률 *@
+        @if (State.IsSending)
+        {
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+                <div class="mb-2">
+                    <div class="flex justify-between text-sm text-gray-600 mb-1">
+                        <span class="font-bold text-blue-600">@State.StatusMessage</span>
+                        <span class="font-bold text-gray-900">@State.SentCount / @State.TotalCount (@State.ProgressPercentage%)</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                        <div class="bg-blue-600 h-4 rounded-full transition-all duration-300 flex items-center justify-center text-xs text-white font-bold" 
+                             style="width: @State.ProgressPercentage%">
+                             @State.ProgressPercentage%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    
+        @* 일괄 전송 버튼 *@
+        <button @onclick="StartSending" 
+                disabled="@State.IsSending"
+                class="w-full py-4 bg-yellow-400 text-gray-900 rounded-xl font-bold text-lg hover:bg-yellow-500 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg">
+            @if (State.IsSending)
+            {
+                <span><i class="fa-solid fa-spinner fa-spin mr-2"></i>전송 중... (@State.SentCount / @State.TotalCount)</span>
+            }
+            else
+            {
+                <span><i class="fa-solid fa-paper-plane mr-2"></i>일괄 전송 시작</span>
+            }
+        </button>
+    }
+</div>
+
+@code {
+    private int remainingSeconds = 0;
+    private System.Threading.Timer? scheduledTimer;
+    private System.Threading.Timer? countdownTimer;
+
+    // 드래그 앤 드롭
+    private string? draggedRoom;
+
+    private bool isLoading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // No artificial delay. Data survives in State service (Scoped).
+        isLoading = false; 
+        await LoadConfig();
+    }
+
+    private async Task RefreshOpenRooms()
+    {
+        try
+        {
+            // 로컬 자동화 서비스 직접 호출 (비동기 래핑)
+            var rooms = await Task.Run(() => Automation.GetOpenChatWindows());
+            
+            if (rooms != null && rooms.Count > 0)
+            {
+                // 자동 분류 (키워드 기반)
+                await ClassifyRooms(rooms);
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "열린 채팅방이 없습니다.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"채팅방 스캔 실패: {ex.Message}");
+        }
+    }
+
+    private async Task ClassifyRooms(List<string> rooms)
+    {
+        var freeKeywords = new[] { "무료", "체험", "이벤트", "Free" };
+        var memberKeywords = new[] { "VIP", "골드", "정회원", "Member" };
+
+        State.SourceRooms.Clear();
+        State.FreeRooms.Clear();
+        State.MemberRooms.Clear();
+        State.SelectedRooms.Clear();
+
+        foreach (var room in rooms)
+        {
+            bool classified = false;
+
+            // 무료방 분류
+            foreach (var keyword in freeKeywords)
+            {
+                if (room.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                {
+                    State.FreeRooms.Add(room);
+                    classified = true;
+                    break;
+                }
+            }
+
+            if (classified) continue;
+
+            // 멤버십 분류
+            foreach (var keyword in memberKeywords)
+            {
+                if (room.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                {
+                    State.MemberRooms.Add(room);
+                    classified = true;
+                    break;
+                }
+            }
+
+            if (!classified)
+            {
+                State.SourceRooms.Add(room);
+            }
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void OnDragStart(string room)
+    {
+        draggedRoom = room;
+    }
+
+    private void OnDrop(List<string> targetList)
+    {
+        if (draggedRoom != null)
+        {
+            RemoveRoomFromAllLists(draggedRoom);
+            if (!targetList.Contains(draggedRoom))
+            {
+                targetList.Add(draggedRoom);
+            }
+            
+            draggedRoom = null;
+            StateHasChanged();
+        }
+    }
+
+    private void MoveSelectedTo(List<string> targetList)
+    {
+        if (State.SelectedRooms.Count == 0) 
+        {
+            JS.InvokeVoidAsync("alert", "먼저 이동할 채팅방을 선택해주세요.");
+            return;
+        }
+
+        var roomsToMove = State.SelectedRooms.ToList();
+        
+        foreach (var room in roomsToMove)
+        {
+            RemoveRoomFromAllLists(room);
+            if (!targetList.Contains(room))
+            {
+                targetList.Add(room);
+            }
+        }
+        
+        State.SelectedRooms.Clear();
+        StateHasChanged();
+    }
+
+    private void RemoveRoomFromAllLists(string room)
+    {
+        State.SourceRooms.Remove(room);
+        State.FreeRooms.Remove(room);
+        State.MemberRooms.Remove(room);
+    }
+
+    private void ToggleSelection(List<string> list, string room)
+    {
+        if (State.SelectedRooms.Contains(room))
+            State.SelectedRooms.Remove(room);
+        else
+            State.SelectedRooms.Add(room);
+    }
+
+    private async Task DeleteSelected()
+    {
+        if (State.SelectedRooms.Count == 0) 
+        {
+            await JS.InvokeVoidAsync("alert", "삭제할 채팅방을 먼저 선택해주세요.");
+            return;
+        }
+        
+        var confirmed = await JS.InvokeAsync<bool>("confirm", $"{State.SelectedRooms.Count}개의 채팅방을 목록에서 제거하시겠습니까?");
+        if (!confirmed) return;
+
+        foreach (var room in State.SelectedRooms.ToList())
+        {
+            RemoveRoomFromAllLists(room);
+        }
+        State.SelectedRooms.Clear();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task ResetAll()
+    {
+        var confirmed = await JS.InvokeAsync<bool>("confirm", "모든 목록과 메시지를 초기화하시겠습니까?");
+        if (confirmed)
+        {
+            State.Reset();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ChooseFile()
+    {
+        try 
+        {
+            var path = await Automation.PickImageFileAsync();
+            if (!string.IsNullOrEmpty(path))
+            {
+                State.AttachmentPath = path;
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"파일 선택 오류: {ex.Message}");
+        }
+    }
+
+    private async Task StartSending()
+    {
+        await StartSendingInternal(false);
+    }
+
+    private async Task StartSendingInternal(bool skipConfirm)
+    {
+        if (State.IsSending) return;
+
+        if (State.FreeRooms.Count == 0 && State.MemberRooms.Count == 0)
+        {
+            await JS.InvokeVoidAsync("alert", "발송 대상이 없습니다.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(State.FreeMessage) && string.IsNullOrWhiteSpace(State.MemberMessage) && string.IsNullOrWhiteSpace(State.AttachmentPath))
+        {
+            await JS.InvokeVoidAsync("alert", "메시지 또는 파일을 입력해주세요.");
+            return;
+        }
+
+        // 예약 발송(skipConfirm=true)이 아닐 때만 확인 창 표시
+        if (!skipConfirm)
+        {
+            var confirm = await JS.InvokeAsync<bool>("confirm", 
+                $"다음과 같이 전송하시겠습니까?\n\n무료방: {State.FreeRooms.Count}개\n멤버십: {State.MemberRooms.Count}개");
+
+            if (!confirm) return;
+        }
+
+        State.IsSending = true;
+        State.ProgressPercentage = 0;
+        State.SentCount = 0;
+        State.TotalCount = State.FreeRooms.Count + State.MemberRooms.Count;
+        State.StatusMessage = "전송 시작...";
+
+        try
+        {
+            var batches = new List<object>();
+            if (State.FreeRooms.Count > 0)
+            {
+                batches.Add(new { Type = "무료방", Rooms = State.FreeRooms, Message = State.FreeMessage });
+            }
+            if (State.MemberRooms.Count > 0)
+            {
+                batches.Add(new { Type = "멤버십", Rooms = State.MemberRooms, Message = State.MemberMessage });
+            }
+
+            var request = new SendRequest
+            {
+                Batches = batches.Select(x => {
+                    // Reflection or re-structuring needed because 'batches' is List<object>
+                    // Let's fix this properly.
+                    dynamic d = x;
+                    return new SendBatch { Type = d.Type, Rooms = d.Rooms, Message = d.Message };
+                }).ToList(),
+                FilePath = State.AttachmentPath,
+                FileFirst = State.FileFirst,
+                DelayMin = 1.0,
+                DelayMax = 3.0
+            };
+
+            // Progress Handler
+            var progressHandler = new Progress<SendProgress>(p => 
+            {
+                State.SentCount = p.Current;
+                State.TotalCount = p.Total;
+                State.StatusMessage = p.Message;
+                State.ProgressPercentage = p.Total > 0 ? (int)((double)p.Current / p.Total * 100) : 0;
+                StateHasChanged();
+            });
+            
+            var resultJson = await Task.Run(() => Automation.ExecuteWithProgressAsync(request, progressHandler));
+            
+            var result = JsonSerializer.Deserialize<JsonElement>(resultJson);
+            if (result.TryGetProperty("success", out var successElement) && successElement.GetBoolean())
+            {
+                 var msg = result.GetProperty("message").GetString();
+                 await JS.InvokeVoidAsync("alert", msg);
+            }
+            else
+            {
+                 var msg = result.TryGetProperty("message", out var msgElement) ? msgElement.GetString() : "Unknown error";
+                 await JS.InvokeVoidAsync("alert", $"전송 실패: {msg}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"오류 발생: {ex.Message}");
+        }
+        finally
+        {
+            State.IsSending = false;
+            State.ProgressPercentage = 100;
+            State.StatusMessage = "완료";
+            StateHasChanged();
+        }
+    }
+
+    private async Task ConfirmSchedule()
+    {
+        if (State.ScheduledTime == null)
+        {
+            await JS.InvokeVoidAsync("alert", "날짜와 시간을 선택해주세요.");
+            return;
+        }
+
+        if (State.ScheduledTime <= DateTime.Now)
+        {
+            await JS.InvokeVoidAsync("alert", "현재 시간보다 미래의 시간으로 설정해주세요.");
+            return;
+        }
+
+        State.IsScheduleConfirmed = true;
+        if (State.IsScheduled) 
+        {
+            StartScheduledSending(); 
+            State.IsScheduleConfirmed = true; 
+        }
+        
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void StartScheduledSending()
+    {
+        if (State.IsScheduled)
+        {
+            scheduledTimer?.Dispose();
+            countdownTimer?.Dispose();
+            State.IsScheduled = false;
+            remainingSeconds = 0;
+        }
+        else
+        {
+            if (!State.IsScheduleConfirmed || State.ScheduledTime == null)
+            {
+                 JS.InvokeVoidAsync("alert", "먼저 [시간 적용] 버튼을 눌러 시간을 확정해주세요.");
+                 return;
+            }
+
+            if (State.ScheduledTime <= DateTime.Now)
+            {
+                JS.InvokeVoidAsync("alert", "설정된 시간이 이미 지났습니다. 시간을 다시 설정해주세요.");
+                State.IsScheduleConfirmed = false;
+                return;
+            }
+
+            var delay = (State.ScheduledTime.Value - DateTime.Now).TotalMilliseconds;
+            remainingSeconds = (int)(delay / 1000);
+
+            scheduledTimer = new System.Threading.Timer(async _ =>
+            {
+                await InvokeAsync(async () =>
+                {
+                    // 예약 발송 시에는 확인 창 건너뛰기
+                    await StartSendingInternal(true);
+                    
+                    // 완료 후 상태 초기화
+                    State.IsScheduled = false;
+                    State.IsScheduleConfirmed = false;
+                    scheduledTimer?.Dispose();
+                    countdownTimer?.Dispose();
+                    remainingSeconds = 0;
+                    StateHasChanged();
+                });
+            }, null, (int)delay, Timeout.Infinite);
+
+            countdownTimer = new System.Threading.Timer(_ =>
+            {
+                if (remainingSeconds > 0)
+                {
+                    remainingSeconds--;
+                    InvokeAsync(StateHasChanged);
+                }
+                else if (remainingSeconds <= 0 && State.IsScheduled)
+                {
+                    countdownTimer?.Dispose();
+                }
+            }, null, 0, 1000);
+
+            State.IsScheduled = true;
+        }
+    }
+
+    private async Task LoadConfig()
+    {
+        await Task.CompletedTask;
+    }
+
+    private async Task SaveConfig()
+    {
+        await Task.CompletedTask;
+    }
+
+    public void Dispose()
+    {
+        scheduledTimer?.Dispose();
+        countdownTimer?.Dispose();
+    }
+}

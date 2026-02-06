@@ -1,0 +1,15 @@
+# Exclude Client Project
+OneClick.Client/
+
+# Exclude Build Artifacts
+**/bin/
+**/obj/
+.git/
+.vs/
+.vscode/
+**/*.user
+
+# Exclude Docker related
+Dockerfile
+docker-compose.yml
+.dockerignore
