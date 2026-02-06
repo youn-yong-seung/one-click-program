@@ -1,0 +1,22 @@
+@page "/"
+@inject NavigationManager Nav
+@inject TokenService TokenService
+@using OneClick.Client.Services
+
+<p>Redirecting...</p>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var hasToken = await TokenService.LoadTokensAsync();
+        
+        if (!hasToken)
+        {
+            Nav.NavigateTo("/login");
+        }
+        else
+        {
+            Nav.NavigateTo("/dashboard/home");
+        }
+    }
+}

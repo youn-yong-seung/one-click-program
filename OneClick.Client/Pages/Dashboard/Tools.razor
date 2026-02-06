@@ -1,0 +1,101 @@
+@page "/dashboard/tools/{CategoryId:int}"
+@layout AutomationLayout
+@using OneClick.Shared.DTOs
+@using OneClick.Client.Services
+@using OneClick.Client.Shared
+@inject ModuleApiClient ModuleService
+@inject NavigationManager Nav
+@inject OneClick.Client.Services.CategoryApiClient CategoryService
+
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    @if (isLoading)
+    {
+        <div class="flex justify-center items-center h-64">
+            <i class="fa-solid fa-circle-notch fa-spin text-4xl text-indigo-500"></i>
+        </div>
+    }
+    else if (modules.Count == 0)
+    {
+        <div class="text-center py-16 bg-white rounded-2xl border border-dashed border-gray-200 shadow-sm">
+            <i class="fa-solid fa-box-open text-4xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500">이 카테고리에는 아직 도구가 없습니다.</p>
+        </div>
+    }
+    else 
+    {
+         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @foreach (var module in modules)
+            {
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 hover:shadow-lg hover:-translate-y-1 hover:z-10 transition-all duration-300 relative group overflow-hidden">
+                    
+                    <!-- Locked content overlay -->
+                    @if (module.IsLocked)
+                    {
+                        <div class="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex flex-col items-center justify-center text-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                           <i class="fa-solid fa-lock text-3xl text-gray-400 mb-2"></i>
+                           <span class="font-bold text-gray-700">구독 필요</span>
+                        </div>
+                    }
+
+                    <div class="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl mb-6 shadow-sm">
+                        <i class="@module.IconClass"></i>
+                    </div>
+                    
+                    <h3 class="font-bold text-xl text-gray-900 mb-1">@module.Title</h3>
+                    <p class="text-sm text-indigo-500 font-bold mb-3 uppercase tracking-wide">@categoryName</p>
+                    <p class="text-gray-500 mb-8 leading-relaxed h-12 line-clamp-2">@module.Description</p>
+                    
+                    <button @onclick="() => RunModule(module)" disabled="@module.IsLocked" 
+                        class="@(module.IsLocked ? "bg-gray-100 text-gray-400" : "bg-gray-900 text-white hover:bg-gray-800 shadow-md hover:shadow-gray-300") w-full py-3.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2">
+                         @if (module.IsLocked) { <span><i class="fa-solid fa-lock"></i> 잠김</span> }
+                         else { <span><i class="fa-solid fa-play text-sm"></i> 실행하기</span> }
+                    </button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int CategoryId { get; set; }
+
+    private List<ModuleDto> modules = new();
+    private string categoryName = "";
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        try
+        {
+            // Fetch category name details if possible, or just the modules
+            // Assuming we might need to fetch category details separately or infer from somewhere.
+            // For now, let's fetch modules.
+            modules = await ModuleService.GetModulesAsync(CategoryId);
+            
+            // Optionally fetch category name if we have an API for it
+             var categories = await CategoryService.GetCategoriesAsync();
+             var cat = categories.FirstOrDefault(c => c.Id == CategoryId);
+             categoryName = cat?.Name ?? "Unknown";
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private void GoBackToCategories()
+    {
+        Nav.NavigateTo("/dashboard/home");
+    }
+
+    private void RunModule(ModuleDto module)
+    {
+        if (module.IsLocked) return;
+        Nav.NavigateTo($"/dashboard/module/{module.Id}");
+    }
+}

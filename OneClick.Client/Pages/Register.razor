@@ -1,0 +1,136 @@
+@page "/register"
+@inject OneClick.Client.Services.AuthApiClient AuthApi
+@inject NavigationManager Nav
+@using OneClick.Shared.DTOs
+
+<div class="center-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h2>OneClick</h2>
+        </div>
+
+        <div class="auth-form">
+            <div class="form-group">
+                <label class="form-label">아이디</label>
+                <div class="input-group-custom">
+                    <i class="fa-solid fa-user input-icon"></i>
+                    <input @bind="registerModel.Username" class="form-input" placeholder="아이디를 입력해주세요" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">비밀번호</label>
+                <div class="input-group-custom">
+                    <i class="fa-solid fa-lock input-icon"></i>
+                    <input @bind="registerModel.Password" type="password" class="form-input" placeholder="비밀번호를 입력해주세요" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">비밀번호 확인</label>
+                <div class="input-group-custom">
+                    <i class="fa-solid fa-check-double input-icon"></i>
+                    <input @bind="registerModel.ConfirmPassword" type="password" class="form-input" placeholder="비밀번호를 다시 입력해주세요"
+                           @onkeydown="@Enter" />
+                </div>
+            </div>
+
+            <button @onclick="HandleRegister" class="btn-primary-custom" disabled="@isLoading">
+                @if (isLoading)
+                {
+                    <span><i class="fa-solid fa-circle-notch fa-spin"></i> 회원가입 중...</span>
+                }
+                else
+                {
+                    <span>회원가입</span>
+                }
+            </button>
+            
+            @if (!string.IsNullOrEmpty(errorMessage))
+            {
+                <div class="custom-alert alert-error">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span>@errorMessage</span>
+                </div>
+            }
+            @if (!string.IsNullOrEmpty(successMessage))
+            {
+                <div class="custom-alert alert-success">
+                    <i class="fa-solid fa-check-circle"></i>
+                    <span>@successMessage</span>
+                </div>
+            }
+
+            <div class="auth-footer">
+                이미 계정이 있으신가요? 
+                <button @onclick="GoToLogin" class="btn-link-custom">로그인</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private RegisterRequestDto registerModel = new();
+    private string? errorMessage;
+    private string? successMessage;
+    private bool isLoading = false;
+
+    private async Task Enter(KeyboardEventArgs e)
+    {
+        if (e.Code == "Enter" || e.Code == "NumpadEnter")
+        {
+            await HandleRegister();
+        }
+    }
+
+    private async Task HandleRegister()
+    {
+        if (isLoading) return;
+        isLoading = true;
+        errorMessage = null;
+        successMessage = null;
+
+        if (string.IsNullOrWhiteSpace(registerModel.Username) || string.IsNullOrWhiteSpace(registerModel.Password))
+        {
+             errorMessage = "필수 정보를 입력해주세요.";
+             isLoading = false;
+             return;
+        }
+
+        if (registerModel.Password != registerModel.ConfirmPassword)
+        {
+            errorMessage = "비밀번호가 일치하지 않습니다.";
+            isLoading = false;
+            return;
+        }
+
+        try
+        {
+            var response = await AuthApi.RegisterAsync(registerModel);
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "계정이 생성되었습니다. 로그인 페이지로 이동합니다.";
+                await Task.Delay(1500);
+                Nav.NavigateTo("/login");
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                errorMessage = $"회원가입이 실패했습니다: {error}";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "회원가입이 실패했습니다.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void GoToLogin()
+    {
+        Nav.NavigateTo("/login");
+    }
+}

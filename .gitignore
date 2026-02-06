@@ -1,0 +1,3 @@
+# Ignore secrets file
+OneClick.Server/appsettings.json
+**/appsettings.json

@@ -1,0 +1,11 @@
+C:\Users\user\Documents\oneclick\OneClick.Shared\bin\Debug\net8.0\OneClick.Shared.deps.json
+C:\Users\user\Documents\oneclick\OneClick.Shared\bin\Debug\net8.0\OneClick.Shared.dll
+C:\Users\user\Documents\oneclick\OneClick.Shared\bin\Debug\net8.0\OneClick.Shared.pdb
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Debug\net8.0\OneClick.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Debug\net8.0\OneClick.Shared.AssemblyInfoInputs.cache
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Debug\net8.0\OneClick.Shared.AssemblyInfo.cs
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Debug\net8.0\OneClick.Shared.csproj.CoreCompileInputs.cache
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Debug\net8.0\OneClick.Shared.dll
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Debug\net8.0\refint\OneClick.Shared.dll
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Debug\net8.0\OneClick.Shared.pdb
+C:\Users\user\Documents\oneclick\OneClick.Shared\obj\Debug\net8.0\ref\OneClick.Shared.dll

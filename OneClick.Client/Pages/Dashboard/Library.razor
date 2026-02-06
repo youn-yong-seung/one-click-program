@@ -1,0 +1,51 @@
+@page "/dashboard/library"
+@layout AutomationLayout
+@using OneClick.Client.Shared
+@using OneClick.Client.Services
+@inject CategoryApiClient CategoryService
+@inject NavigationManager Nav
+
+<div class="flex items-center justify-center h-full">
+    @if (isLoading)
+    {
+        <div class="flex flex-col items-center gap-4">
+             <i class="fa-solid fa-circle-notch fa-spin text-4xl text-indigo-500"></i>
+             <p class="text-gray-500">Loading library...</p>
+        </div>
+    }
+    else if (!hasCategories)
+    {
+        <div class="text-center">
+            <i class="fa-solid fa-box-open text-4xl text-gray-300 mb-2"></i>
+            <p class="text-gray-500">등록된 자동화 도구가 없습니다.</p>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private bool hasCategories = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var categories = await CategoryService.GetCategoriesAsync();
+            if (categories != null && categories.Any())
+            {
+                hasCategories = true;
+                // Redirect to the first category immediately
+                Nav.NavigateTo($"/dashboard/tools/{categories.First().Id}", replace: true);
+            }
+            else
+            {
+                hasCategories = false;
+                isLoading = false;
+            }
+        }
+        catch(Exception)
+        {
+            isLoading = false;
+        }
+    }
+}

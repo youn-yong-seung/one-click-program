@@ -1,0 +1,270 @@
+@page "/dashboard/subscription"
+@layout DashboardLayout
+@implements IDisposable
+@inject NavigationManager Nav
+@inject OneClick.Client.Services.PaymentService PaymentService
+@inject OneClick.Client.Services.TokenService TokenService
+@inject OneClick.Client.Services.CategoryApiClient CategoryApi
+@using OneClick.Client.Services
+@using OneClick.Client.Shared
+
+<!-- Background Decoration -->
+<div class="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+    <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+    <div class="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+</div>
+
+<div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Header -->
+    <div class="text-center mb-16">
+        <h2 class="text-base font-semibold text-indigo-600 tracking-wide uppercase">Pricing Plans</h2>
+        <p class="mt-2 text-4xl font-extrabold text-gray-900 sm:text-5xl sm:tracking-tight lg:text-6xl">
+            비즈니스 성장을 위한<br/>최적의 플랜을 선택하세요.
+        </p>
+        <p class="max-w-xl mt-5 mx-auto text-xl text-gray-500">
+            자동화로 절약한 시간, 더 가치 있는 일에 투자하세요.
+        </p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(paymentError))
+    {
+        <div class="max-w-3xl mx-auto mb-10 p-4 bg-white border-l-4 @(paymentError.Contains("적용되었습니다") ? "border-green-500 text-green-700" : "border-red-500 text-red-700") rounded shadow-sm animate-pulse">
+            <div class="flex items-center">
+                <i class="fa-solid @(paymentError.Contains("적용되었습니다") ? "fa-circle-check" : "fa-circle-exclamation") mr-3 text-xl"></i>
+                <span class="font-medium">@paymentError</span>
+            </div>
+        </div>
+    }
+
+    <!-- Pricing Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-10 items-start">
+        
+        <!-- 1. Single Category Plan (10,000원) -->
+        <div class="relative group bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 p-8 flex flex-col h-full">
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-500 uppercase tracking-widest">Single</h3>
+                <div class="mt-4 flex items-baseline">
+                    <span class="text-4xl font-extrabold text-gray-900">₩10,000</span>
+                    <span class="ml-1 text-xl font-medium text-gray-500">/ 월</span>
+                </div>
+                <p class="mt-2 text-gray-500 text-sm">특정 분야 집중 공략</p>
+            </div>
+
+            <div class="flex-grow">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">카테고리 선택</label>
+                <div class="relative">
+                    <select @bind="selectedCategoryId" class="block w-full pl-3 pr-10 py-3 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-xl bg-gray-50 transition-shadow">
+                        <option value="0">선택해주세요</option>
+                        @foreach (var cat in categories)
+                        {
+                            <option value="@cat.Id">@cat.Name</option>
+                        }
+                    </select>
+                </div>
+                
+                <ul class="mt-6 space-y-4">
+                    <li class="flex items-start">
+                        <div class="flex-shrink-0"><i class="fa-solid fa-check text-green-500"></i></div>
+                        <p class="ml-3 text-sm text-gray-700">선택한 카테고리 모든 기능</p>
+                    </li>
+                    <li class="flex items-start">
+                        <div class="flex-shrink-0"><i class="fa-solid fa-check text-green-500"></i></div>
+                        <p class="ml-3 text-sm text-gray-700">기본 기술 지원</p>
+                    </li>
+                </ul>
+            </div>
+
+            <button @onclick="() => ProcessPayment(PaymentType.Single)" disabled="@(isProcessing || selectedCategoryId == 0)"
+                class="@(selectedCategoryId == 0 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-indigo-50 text-indigo-700 hover:bg-indigo-100 shadow-sm hover:shadow") mt-8 w-full block py-4 px-6 text-center rounded-xl font-bold text-lg transition-all duration-200 border border-transparent">
+                @(selectedCategoryId == 0 ? "카테고리 선택 필요" : "시작하기")
+            </button>
+        </div>
+
+        <!-- 2. ALL PASS (30,000원 - Highlighted) -->
+        <div class="relative z-10 bg-gray-900 rounded-3xl shadow-2xl p-8 flex flex-col h-full transform md:-translate-y-4 border border-gray-800">
+            <!-- Badge -->
+            <div class="absolute top-0 right-0 -mt-3 -mr-3">
+                <span class="inline-flex items-center px-4 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg uppercase tracking-wide">
+                    Most Popular
+                </span>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-pink-400 uppercase tracking-widest">All Access</h3>
+                <div class="mt-4 flex items-baseline text-white">
+                    <span class="text-5xl font-extrabold tracking-tight">₩30,000</span>
+                    <span class="ml-1 text-xl font-medium text-gray-400">/ 월</span>
+                </div>
+                <p class="mt-2 text-gray-400 text-sm">모든 제한을 해제하세요.</p>
+            </div>
+
+            <div class="flex-grow">
+                <ul class="space-y-4 mt-6">
+                    @foreach (var feature in new[] { "모든 카테고리 무제한 이용", "우선 기술 지원 (Priority Support)", "신규 기능 베타 액세스", "광고 제거 및 속도 향상" })
+                    {
+                        <li class="flex items-start">
+                            <div class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-indigo-800 text-indigo-200">
+                                <i class="fa-solid fa-check text-xs"></i>
+                            </div>
+                            <p class="ml-4 text-base text-gray-300">@feature</p>
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            <button @onclick="() => ProcessPayment(PaymentType.All)" disabled="@isProcessing"
+                class="mt-10 w-full block py-4 px-6 text-center rounded-xl font-bold text-lg text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 shadow-lg transform hover:scale-[1.02] transition-all duration-200">
+                @(isProcessing ? "처리 중..." : "지금 구독하기 🚀")
+            </button>
+            
+            <p class="mt-4 text-center text-xs text-gray-500">언제든지 해지 가능합니다.</p>
+        </div>
+
+        <!-- 3. Free Trial / Coupon -->
+        <div class="relative group bg-white rounded-3xl shadow-xl hover:shadow-2xl transition-all duration-300 border border-gray-100 p-8 flex flex-col h-full">
+            <div class="mb-6">
+                <h3 class="text-lg font-medium text-gray-500 uppercase tracking-widest">Starter</h3>
+                <div class="mt-4 flex items-baseline">
+                    <span class="text-4xl font-extrabold text-gray-900">FREE</span>
+                    <span class="ml-1 text-xl font-medium text-gray-500">/ trial</span>
+                </div>
+                <p class="mt-2 text-gray-500 text-sm">쿠폰 사용 및 체험 (준비중)</p>
+            </div>
+
+            <div class="flex-grow">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">프로모션 코드</label>
+                <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa-solid fa-ticket text-gray-400"></i>
+                    </div>
+                    <input @bind="couponCode" type="text" class="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 py-3 sm:text-sm border-gray-300 rounded-xl bg-gray-50 uppercase placeholder-gray-400" placeholder="CODE">
+                </div>
+                
+                <ul class="mt-6 space-y-4">
+                    <li class="flex items-start">
+                        <div class="flex-shrink-0"><i class="fa-solid fa-check text-green-500"></i></div>
+                        <p class="ml-3 text-sm text-gray-700">기간 한정 무료 체험</p>
+                    </li>
+                    <li class="flex items-start">
+                        <div class="flex-shrink-0"><i class="fa-solid fa-check text-green-500"></i></div>
+                        <p class="ml-3 text-sm text-gray-700">해지 위약금 없음</p>
+                    </li>
+                </ul>
+            </div>
+
+            <button @onclick="RedeemCoupon" disabled="@(isProcessing || string.IsNullOrWhiteSpace(couponCode))"
+                class="mt-8 w-full block py-4 px-6 text-center rounded-xl font-bold text-lg text-gray-700 bg-white border-2 border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors">
+                코드 등록
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    /* Custom Animations */
+    @@keyframes blob {
+        0% { transform: translate(0px, 0px) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+        100% { transform: translate(0px, 0px) scale(1); }
+    }
+    .animate-blob {
+        animation: blob 7s infinite;
+    }
+    .animation-delay-2000 {
+        animation-delay: 2s;
+    }
+</style>
+
+@code {
+    private bool isProcessing = false;
+    private string? paymentError;
+    private int selectedCategoryId = 0;
+    private string couponCode = "";
+    private List<CategoryDto> categories = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try 
+        {
+            categories = await CategoryApi.GetCategoriesAsync();
+        }
+        catch (Exception ex)
+        {
+            paymentError = "카테고리 목록 로드 실패 (DB 연결 확인)";
+            Console.WriteLine(ex);
+        }
+    }
+
+    private enum PaymentType { All, Single }
+
+    private async Task ProcessPayment(PaymentType type)
+    {
+        isProcessing = true;
+        paymentError = null;
+        StateHasChanged();
+
+        try
+        {
+            int amount = 0;
+            string orderName = "";
+            string typeTag = "";
+            string categoryTag = "0";
+
+            if (type == PaymentType.All)
+            {
+                amount = 30000;
+                orderName = "OneClick 올인원 패스 (1개월)";
+                typeTag = "ALL";
+            }
+            else
+            {
+                amount = 10000;
+                var catName = categories.FirstOrDefault(c => c.Id == selectedCategoryId)?.Name ?? "단일 카테고리";
+                orderName = $"OneClick {catName} 구독 (1개월)";
+                typeTag = "SINGLE";
+                categoryTag = selectedCategoryId.ToString();
+            }
+
+            string orderId = $"{Guid.NewGuid()}_{typeTag}_{categoryTag}";
+            var customerKey = "USER_" + Guid.NewGuid().ToString().Substring(0, 8);
+            await PaymentService.InitializePaymentWidgetAsync(customerKey); 
+            await PaymentService.RequestPaymentAsync(orderId, orderName, amount, "customer@example.com", "홍길동");
+        }
+        catch (Exception ex)
+        {
+            paymentError = $"결제 에러: {ex.Message}";
+            isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task RedeemCoupon()
+    {
+        if (string.IsNullOrWhiteSpace(couponCode)) return;
+
+        isProcessing = true;
+        paymentError = null;
+        StateHasChanged();
+
+        try
+        {
+            var message = await PaymentService.RedeemCouponAsync(couponCode);
+            paymentError = message; 
+            
+            await Task.Delay(2000);
+            Nav.NavigateTo("/dashboard/home", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            paymentError = ex.Message;
+        }
+        finally
+        {
+            isProcessing = false;
+        }
+    }
+
+    public void Dispose() { }
+}

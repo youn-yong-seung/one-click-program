@@ -1,0 +1,120 @@
+@inherits LayoutComponentBase
+@layout DashboardLayout
+@using OneClick.Shared.DTOs
+@using Microsoft.AspNetCore.Components.Routing
+@inject OneClick.Client.Services.CategoryApiClient CategoryService
+@inject NavigationManager Nav
+@inject IJSRuntime JSRuntime
+
+<div class="flex h-full relative">
+    <!-- Secondary Sidebar (Categories) -->
+    <aside class="w-20 bg-gray-50 flex flex-col border-r border-gray-200 z-40 relative flex-shrink-0">
+        <!-- Header / Label -->
+        <div class="h-16 flex items-center justify-center border-b border-gray-200">
+            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Tools</span>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 py-4 space-y-3 flex flex-col items-center overflow-y-auto overflow-x-hidden custom-scrollbar">
+             @foreach (var cat in categories)
+            {
+                <div id="@($"cat-icon-{cat.Id}")" 
+                     class="w-full px-3 flex justify-center" 
+                     @onmouseenter="async () => await ShowTooltip(cat.Id, cat.Name)" 
+                     @onmouseleave="HideTooltip">
+                    <NavLink class="relative flex items-center justify-center w-12 h-12 text-gray-400 rounded-xl hover:bg-white hover:text-indigo-600 hover:shadow-sm transition-all group" 
+                             ActiveClass="bg-white text-indigo-600 shadow-md ring-1 ring-gray-100" 
+                             href="@($"/dashboard/tools/{cat.Id}")">
+                        <!-- Icon -->
+                        <i class="@cat.IconClass text-xl transition-colors"></i>
+                    </NavLink>
+                </div>
+            }
+        </nav>
+    </aside>
+
+    <!-- Content Area -->
+    <div class="flex-1 overflow-auto bg-gray-50 focus:outline-none min-w-0 custom-scrollbar">
+        @Body
+    </div>
+
+    <!-- Global Tooltip -->
+    @if (isTooltipVisible && !string.IsNullOrEmpty(tooltipText))
+    {
+        <div class="fixed left-[21.5rem] px-3 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg pointer-events-none whitespace-nowrap shadow-xl z-50 transition-opacity duration-200"
+             style="top: @(tooltipY)px; transform: translateY(-50%);">
+            @tooltipText
+            <!-- Arrow pointing left -->
+            <div class="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+        </div>
+    }
+</div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background-color: #e5e7eb;
+        border-radius: 20px;
+    }
+</style>
+
+@code {
+    private List<CategoryDto> categories = new();
+    
+    // Tooltip State
+    private bool isTooltipVisible = false;
+    private string tooltipText = "";
+    private double tooltipY = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            categories = await CategoryService.GetCategoriesAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading categories: {ex.Message}");
+        }
+    }
+
+    private async Task ShowTooltip(int id, string name)
+    {
+        tooltipText = name;
+        try 
+        {
+            var rect = await JSRuntime.InvokeAsync<BoundingClientRect>("getBoundingClientRect", $"cat-icon-{id}");
+            if (rect != null)
+            {
+                // Rect is relative to viewport, so fixed positioning is perfect.
+                // Center vertically: Top + Height/2
+                tooltipY = rect.Top + (rect.Height / 2);
+                isTooltipVisible = true;
+                StateHasChanged();
+            }
+        }
+        catch(Exception ex)
+        {
+             Console.WriteLine($"JS Error: {ex.Message}");
+        }
+    }
+
+    private void HideTooltip()
+    {
+        isTooltipVisible = false;
+    }
+
+    public class BoundingClientRect
+    {
+        public double Top { get; set; }
+        public double Height { get; set; }
+        public double Left { get; set; }
+        public double Width { get; set; }
+    }
+}

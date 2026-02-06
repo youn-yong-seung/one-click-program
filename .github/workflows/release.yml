@@ -1,0 +1,99 @@
+name: Release Build and Deploy
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger on version tags like v1.0.0
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+    
+    permissions:
+      contents: write  # Required for creating releases
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Install Velopack CLI
+      run: dotnet tool install -g vpk
+      shell: pwsh
+    
+    - name: Extract version from tag
+      id: get_version
+      run: |
+        $version = "${{ github.ref_name }}" -replace '^v', ''
+        echo "VERSION=$version" >> $env:GITHUB_OUTPUT
+        Write-Host "Building version: $version"
+      shell: pwsh
+    
+    - name: Restore dependencies
+      run: dotnet restore
+      shell: pwsh
+    
+    - name: Publish application
+      run: |
+        dotnet publish OneClick.Client/OneClick.Client.csproj `
+          -c Release `
+          -o ./publish `
+          --self-contained true `
+          -r win-x64 `
+          /p:PublishSingleFile=false `
+          /p:Version="${{ steps.get_version.outputs.VERSION }}"
+      shell: pwsh
+    
+    - name: Build Velopack Release
+      run: |
+        vpk pack `
+          --packId "OneClick" `
+          --packVersion "${{ steps.get_version.outputs.VERSION }}" `
+          --packDir ./publish `
+          --mainExe "OneClick.Client.exe" `
+          --outputDir ./releases
+      shell: pwsh
+    
+    - name: List release files
+      run: |
+        Write-Host "Release files:"
+        Get-ChildItem -Path ./releases | ForEach-Object {
+          Write-Host "  - $($_.Name) ($([math]::Round($_.Length / 1MB, 2)) MB)"
+        }
+      shell: pwsh
+    
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: ./releases/*
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+        body: |
+          ## OneClick v${{ steps.get_version.outputs.VERSION }}
+          
+          ### 설치 방법
+          
+          **신규 사용자:**
+          - `OneClick-Setup.exe`를 다운로드하여 실행하세요.
+          
+          **기존 사용자:**
+          - 프로그램을 실행하면 자동으로 업데이트가 감지됩니다.
+          - 설정 페이지에서 "업데이트 확인" 버튼을 클릭하거나, 자동으로 업데이트가 다운로드됩니다.
+          
+          ### 변경 사항
+          
+          자동 생성된 릴리스 노트를 확인하세요.
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload build artifacts (for debugging)
+      uses: actions/upload-artifact@v4
+      with:
+        name: oneclick-release-${{ steps.get_version.outputs.VERSION }}
+        path: ./releases/*
+        retention-days: 30
